@@ -10,21 +10,6 @@ df = pd.read_json('https://gpa.obec.go.th/reportdata/pp3-4_2566_province.json')
 # Initialize the app
 app = Dash()
 
-# Create a bar chart using Plotly Express
-fig = px.bar(df, x='schools_province', y=['totalmale', 'totalfemale', 'totalstd'],
-             labels={'value': 'Number of Students', 'variable': 'Gender'},
-             barmode='group')
-
-# Define the layout of the app
-app.layout = html.Div(children=[
-    html.H1(children='Student Distribution by Province'),
-    dcc.Graph(
-        id='example-graph',
-        figure=fig
-    )
-])
-
-
 # Define the layout of the app
 app.layout = html.Div(children=[
     html.H1(children='Student Distribution by Province'),
