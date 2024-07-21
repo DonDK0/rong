@@ -18,8 +18,13 @@ app = Dash()
 # Define the layout of the app
 app.layout = html.Div(children=[
     html.H1(children='Student Distribution by Province'),
-    html.Div(style={'flex': '50%'}, children=[
+    html.Div(style={'display': 'flex', 'flex-direction': 'row'},children=[
+            html.Div(style={'width': '50%'}, children=[
         dcc.Graph(id='map-graph')
+    ]),
+    html.Div(style={'width': '50%'}, children=[
+        dcc.Graph(id='province-pi')
+    ]),
     ]),
     dcc.Input(id='province-input', type='text', placeholder='Enter province name'),
     html.Button(id='submit-button', n_clicks=0, children='Search'),
@@ -77,6 +82,28 @@ def update_graph(clickData):
     fig = px.bar(filtered_df, x='schools_province', y=['totalmale', 'totalfemale', 'totalstd'],
                  labels={'value': 'Number of Students', 'variable': 'Gender'},
                  barmode='group')
+    return fig
+
+@app.callback(
+    Output('province-pi', 'figure'),
+    [Input('map-graph', 'clickData')]
+)
+def update_pie_chart(clickData):
+    if clickData is None:
+        filtered_df = df[df['schools_province'] == "นราธิวาส"]
+        title = "นราธิวาส"
+    else:
+        province = clickData['points'][0]['hovertext']
+        filtered_df = df[df['schools_province'] == province]
+        title = f"{province}"
+
+    values = filtered_df[['totalmale', 'totalfemale']].values.flatten()
+    labels = ['Total Male', 'Total Female']
+    colors = ['blue', 'red']
+    fig = go.Figure(data=[go.Pie(labels=labels, values=values, marker=dict(colors=colors))])
+    fig.update_layout(title_text=title)
+
+
     return fig
 
 # Run the app
