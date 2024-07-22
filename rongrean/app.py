@@ -11,7 +11,7 @@ df = pd.read_json('https://gpa.obec.go.th/reportdata/pp3-4_2566_province.json')
 # add lat lon to loded data frame
 df['lat'] = df['schools_province'].map(lambda x: province_coords[x]['lat'] if x in province_coords else None)
 df['lon'] = df['schools_province'].map(lambda x: province_coords[x]['lon'] if x in province_coords else None)
-
+province_options = [{'label': province, 'value': province} for province in df['schools_province'].unique()]
 # Initialize the app
 app = Dash()
 
@@ -19,16 +19,28 @@ app = Dash()
 app.layout = html.Div(children=[
     html.H1(children='Student Distribution by Province'),
     html.Div(style={'display': 'flex', 'flex-direction': 'row'},children=[
-            html.Div(style={'width': '50%'}, children=[
+        html.Div(style={'width': '50%'}, children=[
         dcc.Graph(id='map-graph')
-    ]),
-    html.Div(style={'width': '50%'}, children=[
+        ]),
+        html.Div(style={'width': '50%'}, children=[
         dcc.Graph(id='province-pi')
+        ]), 
     ]),
+    html.Div(style={'display': 'flex', 'flex-direction': 'row', "padding": "10px",'align-items': 'center', 'gap': '10px'},children=[
+        html.Div(style={'width': '50%'}, children=[
+            dcc.Dropdown(
+            id='province-input',
+            options=province_options,
+            placeholder='Select a province'
+            ),
+        ]),
+        html.Div(style={'width': '50%', 'display': 'flex', 'gap': '10px'}, children=[
+            html.Button(id='submit-button', n_clicks=0, children='Search'),
+            html.Button(id='reset-button', n_clicks=0, children='Reset'),
+        ]), 
     ]),
-    dcc.Input(id='province-input', type='text', placeholder='Enter province name'),
-    html.Button(id='submit-button', n_clicks=0, children='Search'),
-    html.Button(id='reset-button', n_clicks=0, children='Reset'),
+        
+
     dcc.Graph(id='province-graph',),
     dcc.Store(id='clicked-provinces', data=[])
 ])
