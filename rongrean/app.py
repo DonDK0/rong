@@ -17,7 +17,7 @@ app = Dash()
 
 # Define the layout of the app
 app.layout = html.Div(children=[
-    html.H1(children='Student Distribution by Province'),
+    html.H1(children='Mathayom 6 students graduate in 2023.'),
     html.Div(style={'display': 'flex', 'flex-direction': 'row'},children=[
         html.Div(style={'width': '50%'}, children=[
         dcc.Graph(id='map-graph')
@@ -79,9 +79,35 @@ def update_graph(clicked_provinces):
         filtered_df = df
     else:
         filtered_df = df[df['schools_province'].isin(clicked_provinces)]
-    fig = px.bar(filtered_df, x='schools_province', y=['totalmale', 'totalfemale', 'totalstd'],
-                 labels={'value': 'Number of Students', 'variable': 'Gender'},
-                 barmode='group')
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x= filtered_df['schools_province'],
+        y= filtered_df['totalmale'],
+        name='Total Male',
+        marker_color='blue'
+    ))
+    fig.add_trace(go.Bar(
+        x= filtered_df['schools_province'],
+        y= filtered_df['totalfemale'],
+        name='Total Female',
+        marker_color='red'
+    ))
+    fig.add_trace(go.Bar(
+        x= filtered_df['schools_province'],
+        y= filtered_df['totalstd'],
+        name='Total Student',
+        marker_color='yellowgreen'
+    ))
+    fig.update_layout(
+    title="Comparison Chart",
+    xaxis_title="Schools Province",
+    yaxis_title="Number of Students",
+    legend_title="Gender",
+    xaxis_tickangle= 70,
+    font=dict(
+        size=16,
+        )
+    )
     return fig
 
 # call back update map
@@ -90,7 +116,7 @@ def update_graph(clicked_provinces):
     [Input('map-graph', 'clickData')]
 )
 def update_map(clickData):
-    fig = px.scatter_mapbox(df, lat='lat', lon='lon', size='totalstd',
+    fig = px.scatter_mapbox(df, lat='lat', lon='lon',
                             hover_name='schools_province', hover_data=['totalmale', 'totalfemale'],
                             zoom=5, height=500)
     
@@ -117,6 +143,11 @@ def update_pie_chart(clicked_provinces):
     labels = ['Total Male', 'Total Female']
     colors = ['blue', 'red']
     fig = go.Figure(data=[go.Pie(labels=labels, values=values, marker=dict(colors=colors))])
+    fig.update_layout(
+        font=dict(
+            size=16,
+            )
+        )
     fig.update_layout(title_text=title)
 
 
