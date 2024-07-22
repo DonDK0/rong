@@ -29,22 +29,44 @@ app.layout = html.Div(children=[
     dcc.Input(id='province-input', type='text', placeholder='Enter province name'),
     html.Button(id='submit-button', n_clicks=0, children='Search'),
     html.Button(id='reset-button', n_clicks=0, children='Reset'),
-    dcc.Graph(id='province-graph',)
+    dcc.Graph(id='province-graph',),
+    dcc.Store(id='clicked-provinces', data=[])
 ])
+
+#call back update data click
+@app.callback(
+    Output('clicked-provinces', 'data'),
+    [Input('submit-button', 'n_clicks'),
+     Input('reset-button', 'n_clicks'),
+     Input('map-graph', 'clickData')],
+    [dependencies.State('province-input', 'value'),
+     dependencies.State('clicked-provinces', 'data')]
+)
+def update_clicked_provinces(n_clicks, resetbtn, clickData, province, clicked_provinces):
+    ctx = callback_context
+    if "reset-button" == ctx.triggered_id:
+        return []
+    
+    if "submit-button" == ctx.triggered_id and province:
+        if province not in clicked_provinces:
+            clicked_provinces.append(province)
+    elif "map-graph" == ctx.triggered_id and clickData:
+        province = clickData['points'][0]['hovertext']
+        if province not in clicked_provinces:
+            clicked_provinces.append(province)
+    
+    return clicked_provinces
 
 # Define the callback to update the graph
 @app.callback(
-    Output('province-graph', 'figure', allow_duplicate=True),
-    [Input('submit-button', 'n_clicks'),Input('reset-button', 'n_clicks')],
-    [dependencies.State('province-input', 'value')],
-    prevent_initial_call=True
+    Output('province-graph', 'figure'),
+    [Input('clicked-provinces', 'data')],
 )
-def update_graph(n_clicks, resetbtn, province):
-    ctx = callback_context
-    if "reset-button"  == ctx.triggered_id:
+def update_graph(clicked_provinces):
+    if not clicked_provinces:
         filtered_df = df
     else:
-        filtered_df = df[df['schools_province'] == province] if province else df
+        filtered_df = df[df['schools_province'].isin(clicked_provinces)]
     fig = px.bar(filtered_df, x='schools_province', y=['totalmale', 'totalfemale', 'totalstd'],
                  labels={'value': 'Number of Students', 'variable': 'Gender'},
                  barmode='group')
@@ -66,34 +88,16 @@ def update_map(clickData):
     
     return fig
 
-#callback update graph from map click
-@app.callback(
-    Output('province-graph', 'figure'),
-    [Input('map-graph', 'clickData')],
-    
-)
-def update_graph(clickData):
-    if clickData is None:
-        filtered_df = df
-    else:
-        province = clickData['points'][0]['hovertext']
-        filtered_df = df[df['schools_province'] == province]
-    
-    fig = px.bar(filtered_df, x='schools_province', y=['totalmale', 'totalfemale', 'totalstd'],
-                 labels={'value': 'Number of Students', 'variable': 'Gender'},
-                 barmode='group')
-    return fig
-
 @app.callback(
     Output('province-pi', 'figure'),
-    [Input('map-graph', 'clickData')]
+    [Input('clicked-provinces', 'data')]
 )
-def update_pie_chart(clickData):
-    if clickData is None:
+def update_pie_chart(clicked_provinces):
+    if not clicked_provinces:
         filtered_df = df[df['schools_province'] == "นราธิวาส"]
         title = "นราธิวาส"
     else:
-        province = clickData['points'][0]['hovertext']
+        province = clicked_provinces[len(clicked_provinces)-1]
         filtered_df = df[df['schools_province'] == province]
         title = f"{province}"
 
