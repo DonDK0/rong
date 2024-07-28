@@ -113,14 +113,35 @@ def update_graph(clicked_provinces):
 # call back update map
 @app.callback(
     Output('map-graph', 'figure'),
-    [Input('map-graph', 'clickData')]
+    [Input('clicked-provinces', 'data')]
 )
-def update_map(clickData):
+def update_map(clicked_provinces):
+    if not clicked_provinces:
+        lat, lon, zoom = df['lat'].mean(), df['lon'].mean(), 5
+    else:
+        last_clicked_province  = clicked_provinces[-1]
+        lat = df[df['schools_province'] == last_clicked_province]['lat'].values[0]
+        lon = df[df['schools_province'] == last_clicked_province]['lon'].values[0]
+        zoom = 15
+
     fig = px.scatter_mapbox(df, lat='lat', lon='lon',
                             hover_name='schools_province', hover_data=['totalmale', 'totalfemale'],
-                            zoom=5, height=500)
+                            zoom=zoom, height=500)
+    fig.update_layout(mapbox=dict(center=dict(lat=lat, lon=lon)))
     
     fig.update_traces(marker=dict(size=10, color='rgba(0, 0, 255, 0.5)', opacity=0.7), selector=dict(mode='markers'))
+    for province in clicked_provinces:
+        fig.add_trace(go.Scattermapbox(
+            lat=[df[df['schools_province'] == province]['lat'].values[0]],
+            lon=[df[df['schools_province'] == province]['lon'].values[0]],
+            mode='markers',
+            marker=go.scattermapbox.Marker(
+                size=20,
+                color='red',
+                opacity=0.9
+            ),
+            name=province
+        ))
     fig.update_layout(mapbox_style="open-street-map")
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
     
